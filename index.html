@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cold Files 1: Taxi (Alpha)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Special+Elite&display=swap');
+
+        :root {
+            --wood-dark: #0a0908;
+            --paper-light: #e0d8cc;
+            --accent-red: #7a0000;
+            --folder-tan: #ad8d60;
+            --folder-darker: #8b6f48;
+        }
+
+        body {
+            background-color: var(--wood-dark);
+            background-image: url('https://www.transparenttextures.com/patterns/dark-wood.png');
+            font-family: 'Courier Prime', monospace;
+            overflow: hidden;
+            height: 100vh;
+            color: #888;
+            margin: 0;
+        }
+
+        .document {
+            position: absolute;
+            width: 270px;
+            height: 200px;
+            background-color: var(--folder-tan);
+            box-shadow: 20px 20px 40px rgba(0,0,0,0.9);
+            cursor: grab;
+            transition: transform 0.1s ease;
+            user-select: none;
+            border-radius: 2px 8px 8px 2px;
+            border: 1px solid var(--folder-darker);
+            z-index: 10;
+        }
+
+        .document::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: 0;
+            width: 100px;
+            height: 20px;
+            background-color: var(--folder-tan);
+            border-radius: 8px 25px 0 0;
+            border-top: 1px solid var(--folder-darker);
+            border-left: 1px solid var(--folder-darker);
+        }
+
+        .document:active { cursor: grabbing; z-index: 100 !important; }
+
+        .document-title {
+            font-family: 'Special Elite', cursive;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            padding: 45px 25px 10px 25px;
+            line-height: 1.4;
+            color: #1a1510;
+            pointer-events: none;
+        }
+
+        .folder-label {
+            position: absolute;
+            top: -15px;
+            left: 15px;
+            font-size: 9px;
+            font-weight: bold;
+            color: rgba(0,0,0,0.5);
+            z-index: 2;
+        }
+
+        .inspected-mark {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            font-size: 20px;
+            color: #0d2e0d;
+            display: none;
+            font-weight: bold;
+        }
+
+        .paper-detail {
+            background-color: var(--paper-light);
+            background-image: url('https://www.transparenttextures.com/patterns/paper-fibers.png');
+            font-family: 'Special Elite', cursive;
+            box-shadow: 0 0 150px rgba(0,0,0,1);
+            color: #1a1a1a;
+            padding: 4rem;
+            border: 1px solid #b0a080;
+        }
+
+        .stamp-red {
+            border: 4px solid #7a0000;
+            color: #7a0000;
+            padding: 10px 25px;
+            font-size: 1.5rem;
+            transform: rotate(-12deg);
+            display: inline-block;
+            margin-bottom: 2rem;
+            font-weight: bold;
+            opacity: 0.8;
+        }
+
+        #msgBox {
+            position: fixed;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #7a0000;
+            color: white;
+            padding: 12px 30px;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.7);
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="msgBox">TÜM ARŞİVİ TARAMADAN KARAR VEREMEZSİNİZ.</div>
+
+    <div id="mainMenu" class="fixed inset-0 bg-black z-[1000] flex flex-col items-center justify-center text-center p-6">
+        <div class="mb-4 px-3 py-1 border border-red-900/50 text-red-900 text-[10px] tracking-[0.3em] uppercase animate-pulse">Alpha v0.1.2 - Erken Erişim</div>
+        <h1 class="font-['Special_Elite'] text-8xl text-stone-200 mb-2 tracking-tighter">COLD FILES</h1>
+        <p class="text-stone-600 tracking-[1.5em] mb-16 uppercase text-sm ml-[1.5em]">Vaka: 34 TKR 22 / Taxi</p>
+        <button onclick="startGame()" class="border-2 border-stone-800 text-stone-400 px-16 py-5 hover:border-stone-400 hover:text-white transition-all tracking-[0.5em] uppercase text-sm">Dosyayı Aç</button>
+    </div>
+
+    <header id="gameHeader" class="hidden fixed top-0 w-full z-50 flex justify-between px-10 py-6 bg-black/90 border-b border-white/5">
+        <div class="flex flex-col">
+            <span class="text-stone-500 font-bold tracking-widest text-[10px] uppercase">Emniyet Genel Müdürlüğü - Kriminal Daire</span>
+            <span class="text-stone-700 text-[9px] font-mono italic">Dosya Durumu: Aktif Soruşturma</span>
+        </div>
+        <div class="flex gap-6">
+            <button onclick="toggleNotes()" class="text-[10px] text-stone-500 border border-stone-800 px-6 py-2 hover:bg-white/5 uppercase transition-all">Not Defteri (N)</button>
+            <button onclick="attemptFinalize()" id="finalBtn" class="text-[10px] text-stone-800 bg-stone-900 px-8 py-2 uppercase cursor-not-allowed transition-all">Karar Ver (Kilitli)</button>
+        </div>
+    </header>
+
+    <main id="desk" class="relative w-full h-full opacity-0 transition-opacity duration-1000"></main>
+
+    <div id="notesPanel" class="hidden fixed bottom-12 right-12 w-80 h-[500px] bg-[#0c0c0c] border border-white/10 p-8 z-[60] shadow-2xl rotate-1">
+        <div class="text-[10px] text-stone-600 mb-4 uppercase tracking-tighter border-b border-white/5 pb-2">Dedektif Notları</div>
+        <textarea id="notes" class="w-full h-[90%] bg-transparent border-none outline-none text-stone-400 font-serif leading-relaxed text-sm resize-none" placeholder="İpuçlarını buraya yaz..."></textarea>
+    </div>
+
+    <div id="docModal" class="fixed inset-0 z-[100] bg-black/98 hidden flex items-center justify-center p-6">
+        <div class="paper-detail max-w-4xl w-full h-[90vh] overflow-y-auto relative">
+            <button onclick="closeModal()" class="fixed top-12 right-12 text-stone-400 border border-stone-400 px-5 py-2 text-[10px] hover:bg-stone-400 hover:text-black uppercase transition-all">Kapat</button>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <div id="finalModal" class="fixed inset-0 z-[200] bg-black/99 hidden flex items-center justify-center">
+        <div class="max-w-lg w-full p-12 bg-zinc-950 border border-white/5 shadow-2xl">
+            <h2 class="text-stone-400 text-xl font-['Special_Elite'] mb-12 uppercase tracking-widest text-center">Hüküm Tutanağı</h2>
+            <div id="suspectList" class="space-y-3"></div>
+            <button onclick="hideFinalize()" class="mt-12 w-full text-[9px] text-stone-700 uppercase tracking-[0.3em] hover:text-stone-300 transition-all">Dosyayı İncelemeye Devam Et</button>
+        </div>
+    </div>
+
+    <div id="gameOverScreen" class="fixed inset-0 bg-black z-[3000] hidden flex flex-col items-center justify-center text-center p-16">
+        <h2 id="endStatus" class="text-6xl font-['Special_Elite'] mb-10 tracking-tighter"></h2>
+        <p id="endText" class="max-w-3xl text-stone-500 text-xl font-serif italic mb-20 leading-relaxed"></p>
+        <button onclick="location.reload()" class="border border-stone-800 text-stone-500 px-12 py-4 hover:border-stone-400 hover:text-white transition-all uppercase text-xs tracking-widest">Alpha Sonu</button>
+    </div>
+
+    <script>
+        const documents = {
+            crime_scene: {
+                id: 'crime_scene',
+                title: 'OLAY YERİ: 34 TKR 22',
+                label: 'İLK MÜDAHALE',
+                content: `
+                    <div class="stamp-red">DELİL 01</div>
+                    <h1 class="text-3xl mb-8 border-b border-stone-800 pb-4">Taksi İnceleme Raporu</h1>
+                    <div class="space-y-6 text-lg">
+                        <p><strong>Bulgu:</strong> Maktul Selim Aksoy direksiyon başında, emniyet kemeri takılı halde ölü bulundu.</p>
+                        <p><strong>Kritik Kanıt:</strong> Maktulün sağ elinde, parmaklarının arasına sıkışmış bir adet <strong>Gümüş Kol Düğmesi</strong> (Üzerinde "C.Y." harfleri kazılı) bulundu.</p>
+                        <p><strong>Araç İçi:</strong> Torpido gözünde maktule ait ilaç çantası açık durumda. Çantanın içinde bir adet <strong>boş su şişesi</strong> ve maktulün rutin kullandığı beyaz haplar mevcut.</p>
+                        <p><strong>Not:</strong> Araçta herhangi bir zorlama izi yok. Yolcu koltuğu temiz, ancak zeminde hastanelerde kullanılan türden bir <strong>mavi galoş parçası</strong> bulundu.</p>
+                    </div>
+                `,
+                x: 100, y: 150, rot: -2, inspected: false
+            },
+            zeynep_statement: {
+                id: 'zeynep_statement',
+                title: 'İFADE TUTANAĞI: ZEYNEP A.',
+                label: 'ŞÜPHELİ SORGUSU',
+                content: `
+                    <h1 class="text-3xl mb-8 border-b border-stone-800 pb-4">Tanık/Şüpheli İfadesi: ZEYNEP A.</h1>
+                    <div class="space-y-6 text-lg">
+                        <p><strong>Meslek:</strong> Hemşire (Özel bir klinikte gece vardiyası).</p>
+                        <p><strong>İfade:</strong> "Hastaneden çıktım, çok yorgundum. Selim amcanın taksisine bindim, onu mahalleden tanırım. Yolda aniden fenalaştı, göğsünü tuttu. Hemen kenara çekmesini söyledim. Torpidodan ilaçlarını istedi. Çantasından <strong>pembe bir hap</strong> çıkarıp verdim, kalp ilacı olduğunu söyledi. Sonra durumu kötüleşince korkup kaçtım, başıma bir iş gelmesin diye. Çok pişmanım."</p>
+                        <p><strong>Gözlem:</strong> İfade sırasında oldukça sakin. Elinde hafif bir titreme var ama profesyonel bir soğukkanlılık sergiliyor.</p>
+                    </div>
+                `,
+                x: 450, y: 120, rot: 4, inspected: false
+            },
+            medical_report: {
+                id: 'medical_report',
+                title: 'TOKSİKOLOJİ VE SAĞLIK KAYDI',
+                label: 'ADLİ TIP ANALİZİ',
+                content: `
+                    <div class="stamp-red">GİZLİ</div>
+                    <h1 class="text-3xl mb-8 border-b border-stone-800 pb-4">Maktul Sağlık Geçmişi</h1>
+                    <div class="space-y-6 text-lg">
+                        <p><strong>Kayıtlı İlaçlar:</strong> Alprazolam (1mg - <strong>Beyaz renkli</strong>, yuvarlak tabletler).</p>
+                        <p><strong>Ölüm Nedeni:</strong> Akut Kalp Durması. Kanda maktulün rutin ilacı yerine yüksek dozda <strong>Digoksin</strong> (Kalp atışını yavaşlatan ama doz aşımında durduran, <strong>pembe renkli</strong> bir ilaç) tespit edildi.</p>
+                        <p><strong>Kritik Bilgi:</strong> Digoksin, maktulün reçetesinde bulunmamaktadır. Bu ilaç sadece hastane ortamında, kontrollü olarak kullanılan bir maddedir.</p>
+                    </div>
+                `,
+                x: 750, y: 140, rot: -1, inspected: false
+            },
+            cemil_file: {
+                id: 'cemil_file',
+                title: 'ŞÜPHELİ KAYDI: CEMİL YAKUT',
+                label: 'PERSONEL DOSYASI',
+                content: `
+                    <h1 class="text-3xl mb-8 border-b border-stone-800 pb-4">Cemil Yakut (Gündüz Şoförü)</h1>
+                    <div class="space-y-6 text-lg">
+                        <p><strong>İlişki:</strong> Maktulün ortağı. Son 3 aydır taksi plakasının satışı yüzünden maktulle kavgalı olduğu biliniyor.</p>
+                        <p><strong>Fiziksel Kanıt:</strong> Cemil'in sağ manşetinde bir kol düğmesi eksik. Maktulün elindeki düğmenin Cemil'e ait olduğu kesinleşti.</p>
+                        <p><strong>Sorgu Notu:</strong> "Kol düğmemi 1 hafta önce araçta kaybettim. Selim bulup cebine koymuştur, bana verecekti herhalde" diyor. Cemil'in herhangi bir tıbbi bilgisi veya hastaneye erişimi yok.</p>
+                    </div>
+                `,
+                x: 350, y: 400, rot: 2, inspected: false
+            }
+        };
+
+        function startGame() {
+            document.getElementById('mainMenu').style.display = 'none';
+            document.getElementById('gameHeader').classList.remove('hidden');
+            document.getElementById('desk').classList.remove('opacity-0');
+            initDesk();
+        }
+
+        function initDesk() {
+            const desk = document.getElementById('desk');
+            desk.innerHTML = '';
+            Object.values(documents).forEach(doc => {
+                const div = document.createElement('div');
+                div.className = `document`;
+                div.id = `doc-${doc.id}`;
+                div.style.left = doc.x + 'px';
+                div.style.top = doc.y + 'px';
+                div.style.transform = `rotate(${doc.rot}deg)`;
+                div.innerHTML = `
+                    <div class="folder-label">${doc.label}</div>
+                    <div class="document-title">${doc.title}</div>
+                    <div class="inspected-mark" id="mark-${doc.id}">✓</div>
+                `;
+                div.ondblclick = () => openDoc(doc.id);
+                makeDraggable(div);
+                desk.appendChild(div);
+            });
+        }
+
+        function makeDraggable(el) {
+            let p1=0, p2=0, p3=0, p4=0;
+            el.onmousedown = (e) => {
+                p3 = e.clientX; p4 = e.clientY;
+                document.onmouseup = () => { document.onmouseup = null; document.onmousemove = null; };
+                document.onmousemove = (e) => {
+                    p1 = p3 - e.clientX; p2 = p4 - e.clientY;
+                    p3 = e.clientX; p4 = e.clientY;
+                    el.style.top = (el.offsetTop - p2) + "px";
+                    el.style.left = (el.offsetLeft - p1) + "px";
+                };
+                document.querySelectorAll('.document').forEach(d => d.style.zIndex = "10");
+                el.style.zIndex = "50";
+            };
+        }
+
+        function openDoc(id) {
+            const doc = documents[id];
+            doc.inspected = true;
+            document.getElementById(`mark-${id}`).style.display = 'block';
+            document.getElementById('modalContent').innerHTML = doc.content;
+            document.getElementById('docModal').classList.remove('hidden');
+            checkStatus();
+        }
+
+        function checkStatus() {
+            const all = Object.values(documents).every(d => d.inspected);
+            if(all) {
+                const b = document.getElementById('finalBtn');
+                b.classList.remove('bg-stone-900', 'text-stone-800', 'cursor-not-allowed');
+                b.classList.add('bg-stone-200', 'text-black', 'cursor-pointer');
+                b.innerText = "Hüküm Ver";
+            }
+        }
+
+        function attemptFinalize() {
+            if(!Object.values(documents).every(d => d.inspected)) {
+                const m = document.getElementById('msgBox');
+                m.style.display = 'block';
+                setTimeout(() => m.style.display = 'none', 3000);
+                return;
+            }
+            showFinalize();
+        }
+
+        function showFinalize() {
+            const l = document.getElementById('suspectList');
+            const s = [
+                {n: "ZEYNEP A.", d: "Hemşire / Yolcu"},
+                {n: "CEMİL YAKUT", d: "Gündüz Şoförü / Ortak"},
+                {n: "DOĞAL ÖLÜM", d: "Kalp Krizi / Kaza"}
+            ];
+            l.innerHTML = s.map(x => `
+                <button onclick="solve('${x.n}')" class="w-full p-5 border border-white/5 hover:border-stone-500 hover:bg-white/5 text-left transition-all">
+                    <div class="text-stone-300 text-sm uppercase tracking-[0.2em] font-bold">${x.n}</div>
+                    <div class="text-[9px] text-stone-600 uppercase mt-1 tracking-widest">${x.d}</div>
+                </button>
+            `).join('');
+            document.getElementById('finalModal').classList.remove('hidden');
+        }
+
+        function solve(name) {
+            const scr = document.getElementById('gameOverScreen');
+            const st = document.getElementById('endStatus');
+            const tx = document.getElementById('endText');
+            document.getElementById('finalModal').classList.add('hidden');
+            scr.classList.remove('hidden');
+
+            if(name === "ZEYNEP A.") {
+                st.innerText = "TEBRİKLER DEDEKTİF";
+                st.style.color = "#a1a1aa";
+                tx.innerText = "Harika bir çıkarım! Zeynep A. ifadesinde maktule 'pembe' bir hap verdiğini söyledi ancak maktulün reçeteli ilacı 'beyaz' idi. Zeynep, maktulün kalp krizini fırsat bilerek yanında getirdiği öldürücü 'Digoksin' (pembe) hapını ona yardım ediyormuş gibi verdi. Cemil'in daha önce kaybettiği kol düğmesini ise maktulün eline tutuşturarak suçu onun üzerine atmaya çalıştı. Zemindeki mavi galoş parçası ve tıbbi bilgi farkı onu ele verdi.";
+            } else if(name === "CEMİL YAKUT") {
+                st.innerText = "KORKUNÇ HATA";
+                st.style.color = "#7f1d1d";
+                tx.innerText = "Cemil Yakut masumdu. Evet, kol düğmesi onundu ve maktulle kavgalıydı ama bir taksi şoförünün hastane ilacına (Digoksin) erişimi yoktu. Zeynep A. profesyonel bir katil gibi tüm kanıtları manipüle etti ve Cemil ömür boyu hapis cezası aldı. Gerçek suçlu hala sokaklarda.";
+            } else {
+                st.innerText = "SORUŞTURMA ÇÖKTÜ";
+                st.style.color = "#525252";
+                tx.innerText = "Dosyadaki çelişkileri görmezden geldin. Otopsi raporundaki yabancı madde ve Zeynep'in ifadesindeki renk detayı gözünden kaçtı. Katil serbest kaldı.";
+            }
+        }
+
+        function closeModal() { document.getElementById('docModal').classList.add('hidden'); }
+        function hideFinalize() { document.getElementById('finalModal').classList.add('hidden'); }
+        function toggleNotes() { document.getElementById('notesPanel').classList.toggle('hidden'); }
+
+        document.addEventListener('keydown', (e) => {
+            if(e.key === "Escape") closeModal();
+            if(e.key.toLowerCase() === "n") toggleNotes();
+        });
+    </script>
+</body>
+</html>
