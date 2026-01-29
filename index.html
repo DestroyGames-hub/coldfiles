@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cold Files 1: Taxi (Alpha)</title>
+    <title>Cold Files Alpha</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Special+Elite&display=swap');
@@ -139,7 +139,7 @@
             <span class="text-stone-700 text-[9px] font-mono italic">Dosya Durumu: Aktif Soruşturma</span>
         </div>
         <div class="flex gap-6">
-            <button onclick="toggleNotes()" class="text-[10px] text-stone-500 border border-stone-800 px-6 py-2 hover:bg-white/5 uppercase transition-all">Not Defteri (N)</button>
+            <button onclick="toggleNotes()" class="text-[10px] text-stone-500 border border-stone-800 px-6 py-2 hover:bg-white/5 uppercase transition-all">Not Defteri</button>
             <button onclick="attemptFinalize()" id="finalBtn" class="text-[10px] text-stone-800 bg-stone-900 px-8 py-2 uppercase cursor-not-allowed transition-all">Karar Ver (Kilitli)</button>
         </div>
     </header>
@@ -338,11 +338,11 @@
             } else if(name === "CEMİL YAKUT") {
                 st.innerText = "KORKUNÇ HATA";
                 st.style.color = "#7f1d1d";
-                tx.innerText = "Cemil Yakut masumdu. Evet, kol düğmesi onundu ve maktulle kavgalıydı ama bir taksi şoförünün hastane ilacına (Digoksin) erişimi yoktu. Zeynep A. profesyonel bir katil gibi tüm kanıtları manipüle etti ve Cemil ömür boyu hapis cezası aldı. Gerçek suçlu hala sokaklarda.";
+                tx.innerText = "Cemil Yakut masumdu. Evet, kol düğmesi onundu ve maktulle kavgalıydı ama bir taksi şoförünün hastane ilacına (Digoksin) erişimi yoktu. Gerçek suçlu hala sokaklarda.";
             } else {
                 st.innerText = "SORUŞTURMA ÇÖKTÜ";
                 st.style.color = "#525252";
-                tx.innerText = "Dosyadaki çelişkileri görmezden geldin. Otopsi raporundaki yabancı madde ve Zeynep'in ifadesindeki renk detayı gözünden kaçtı. Katil serbest kaldı.";
+                tx.innerText = "Dosyadaki çelişkileri görmezden geldin. Katil serbest kaldı.";
             }
         }
 
@@ -352,7 +352,6 @@
 
         document.addEventListener('keydown', (e) => {
             if(e.key === "Escape") closeModal();
-            if(e.key.toLowerCase() === "n") toggleNotes();
         });
     </script>
 </body>
