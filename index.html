@@ -31,13 +31,14 @@
             width: 270px;
             height: 200px;
             background-color: var(--folder-tan);
-            box-shadow: 20px 20px 40px rgba(0,0,0,0.9);
+            box-shadow: 10px 10px 30px rgba(0,0,0,0.6);
             cursor: grab;
-            transition: transform 0.1s ease;
             user-select: none;
             border-radius: 2px 8px 8px 2px;
             border: 1px solid var(--folder-darker);
             z-index: 10;
+            opacity: 0; 
+            will-change: transform, opacity;
         }
 
         .document::before {
@@ -53,7 +54,41 @@
             border-left: 1px solid var(--folder-darker);
         }
 
-        .document:active { cursor: grabbing; z-index: 100 !important; }
+        .document:active { 
+            cursor: grabbing; 
+            z-index: 100 !important; 
+            box-shadow: 20px 20px 50px rgba(0,0,0,0.8);
+            transform: scale(1.02) rotate(var(--endRot)) !important;
+            transition: transform 0.1s ease-out;
+        }
+
+        /* --- AŞIRI GERÇEKÇİ FIRLATMA ANİMASYONU --- */
+        @keyframes ultraToss {
+            0% {
+                opacity: 0;
+                /* Başlangıçta ekranın altından ve çok büyük (kameraya yakın) */
+                transform: translate3d(var(--startX), var(--startY), 400px) rotate(var(--startRot)) scale(2);
+            }
+            60% {
+                opacity: 1;
+                /* Masaya ilk temas anı - biraz daha ileride ve küçük */
+                transform: translate3d(15px, 15px, 0) rotate(var(--midRot)) scale(1.05);
+            }
+            80% {
+                /* Sekme efekti (Bounce) - hafif kalkış */
+                transform: translate3d(-5px, -5px, 10px) rotate(var(--endRot)) scale(1.02);
+            }
+            100% {
+                opacity: 1;
+                /* Final duruş */
+                transform: translate3d(0, 0, 0) rotate(var(--endRot)) scale(1);
+            }
+        }
+
+        .tossed {
+            /* 0.7s sürsün, sekme efekti için özel bir easing */
+            animation: ultraToss 0.75s cubic-bezier(0.2, 0, 0.2, 1) forwards;
+        }
 
         .document-title {
             font-family: 'Special Elite', cursive;
@@ -93,6 +128,7 @@
             color: #1a1a1a;
             padding: 4rem;
             border: 1px solid #b0a080;
+            pointer-events: auto; 
         }
 
         .stamp-red {
@@ -127,7 +163,7 @@
     <div id="msgBox">TÜM ARŞİVİ TARAMADAN KARAR VEREMEZSİNİZ.</div>
 
     <div id="mainMenu" class="fixed inset-0 bg-black z-[1000] flex flex-col items-center justify-center text-center p-6">
-        <div class="mb-4 px-3 py-1 border border-red-900/50 text-red-900 text-[10px] tracking-[0.3em] uppercase animate-pulse">Alpha v0.1.2 - Erken Erişim</div>
+        <div class="mb-4 px-3 py-1 border border-red-900/50 text-red-900 text-[10px] tracking-[0.3em] uppercase animate-pulse">Alpha v0.1.4 - Erken Erişim</div>
         <h1 class="font-['Special_Elite'] text-8xl text-stone-200 mb-2 tracking-tighter">COLD FILES</h1>
         <p class="text-stone-600 tracking-[1.5em] mb-16 uppercase text-sm ml-[1.5em]">Vaka: 34 TKR 22 / Taxi</p>
         <button onclick="startGame()" class="border-2 border-stone-800 text-stone-400 px-16 py-5 hover:border-stone-400 hover:text-white transition-all tracking-[0.5em] uppercase text-sm">Dosyayı Aç</button>
@@ -151,8 +187,8 @@
         <textarea id="notes" class="w-full h-[90%] bg-transparent border-none outline-none text-stone-400 font-serif leading-relaxed text-sm resize-none" placeholder="İpuçlarını buraya yaz..."></textarea>
     </div>
 
-    <div id="docModal" class="fixed inset-0 z-[100] bg-black/98 hidden flex items-center justify-center p-6">
-        <div class="paper-detail max-w-4xl w-full h-[90vh] overflow-y-auto relative">
+    <div id="docModal" onclick="if(event.target === this) closeModal()" class="fixed inset-0 z-[100] bg-black/98 hidden flex items-center justify-center p-6 cursor-pointer">
+        <div class="paper-detail max-w-4xl w-full h-[90vh] overflow-y-auto relative cursor-auto" onclick="event.stopPropagation()">
             <button onclick="closeModal()" class="fixed top-12 right-12 text-stone-400 border border-stone-400 px-5 py-2 text-[10px] hover:bg-stone-400 hover:text-black uppercase transition-all">Kapat</button>
             <div id="modalContent"></div>
         </div>
@@ -245,13 +281,30 @@
         function initDesk() {
             const desk = document.getElementById('desk');
             desk.innerHTML = '';
-            Object.values(documents).forEach(doc => {
+            
+            Object.values(documents).forEach((doc, index) => {
                 const div = document.createElement('div');
-                div.className = `document`;
+                div.className = `document tossed`;
                 div.id = `doc-${doc.id}`;
+                
                 div.style.left = doc.x + 'px';
                 div.style.top = doc.y + 'px';
-                div.style.transform = `rotate(${doc.rot}deg)`;
+                
+                // --- GELİŞMİŞ RASTGELELİK VE KAVİS ---
+                const randomStartX = (Math.random() * 400) - 200; 
+                const randomStartY = 800 + (Math.random() * 200); // Ekranın çok altından
+                const randomStartRot = (Math.random() * 180) - 90; // Havada dönerken gelir
+                const midRot = (doc.rot + randomStartRot) / 2; // Havada geçiş rotasyonu
+
+                div.style.setProperty('--startX', `${randomStartX}px`);
+                div.style.setProperty('--startY', `${randomStartY}px`);
+                div.style.setProperty('--startRot', `${randomStartRot}deg`);
+                div.style.setProperty('--midRot', `${midRot}deg`);
+                div.style.setProperty('--endRot', `${doc.rot}deg`);
+                
+                // Daha hızlı seri atış hissi
+                div.style.animationDelay = `${index * 0.15}s`;
+
                 div.innerHTML = `
                     <div class="folder-label">${doc.label}</div>
                     <div class="document-title">${doc.title}</div>
@@ -266,6 +319,12 @@
         function makeDraggable(el) {
             let p1=0, p2=0, p3=0, p4=0;
             el.onmousedown = (e) => {
+                // Sürüklemeye başlandığında animasyonu temizle
+                const currentRot = getComputedStyle(el).getPropertyValue('--endRot');
+                el.classList.remove('tossed');
+                el.style.transform = `rotate(${currentRot})`;
+                el.style.opacity = '1';
+
                 p3 = e.clientX; p4 = e.clientY;
                 document.onmouseup = () => { document.onmouseup = null; document.onmousemove = null; };
                 document.onmousemove = (e) => {
@@ -338,11 +397,11 @@
             } else if(name === "CEMİL YAKUT") {
                 st.innerText = "KORKUNÇ HATA";
                 st.style.color = "#7f1d1d";
-                tx.innerText = "Cemil Yakut masumdu. Evet, kol düğmesi onundu ve maktulle kavgalıydı ama bir taksi şoförünün hastane ilacına (Digoksin) erişimi yoktu. Gerçek suçlu hala sokaklarda.";
+                tx.innerText = "Cemil Yakut masumdu. Evet, kol düğmesi onundu ve maktulle kavgalıydı ama bir taksi şoförünün hastane ilacına (Digoksin) erişimi yoktu. Zeynep A. profesyonel bir katil gibi tüm kanıtları manipüle etti ve Cemil ömür boyu hapis cezası aldı. Gerçek suçlu hala sokaklarda.";
             } else {
                 st.innerText = "SORUŞTURMA ÇÖKTÜ";
                 st.style.color = "#525252";
-                tx.innerText = "Dosyadaki çelişkileri görmezden geldin. Katil serbest kaldı.";
+                tx.innerText = "Dosyadaki çelişkileri görmezden geldin. Otopsi raporundaki yabancı madde ve Zeynep'in ifadesindeki renk detayı gözünden kaçtı. Katil serbest kaldı.";
             }
         }
 
