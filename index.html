@@ -62,31 +62,25 @@
             transition: transform 0.1s ease-out;
         }
 
-        /* --- AŞIRI GERÇEKÇİ FIRLATMA ANİMASYONU --- */
         @keyframes ultraToss {
             0% {
                 opacity: 0;
-                /* Başlangıçta ekranın altından ve çok büyük (kameraya yakın) */
                 transform: translate3d(var(--startX), var(--startY), 400px) rotate(var(--startRot)) scale(2);
             }
             60% {
                 opacity: 1;
-                /* Masaya ilk temas anı - biraz daha ileride ve küçük */
                 transform: translate3d(15px, 15px, 0) rotate(var(--midRot)) scale(1.05);
             }
             80% {
-                /* Sekme efekti (Bounce) - hafif kalkış */
                 transform: translate3d(-5px, -5px, 10px) rotate(var(--endRot)) scale(1.02);
             }
             100% {
                 opacity: 1;
-                /* Final duruş */
                 transform: translate3d(0, 0, 0) rotate(var(--endRot)) scale(1);
             }
         }
 
         .tossed {
-            /* 0.7s sürsün, sekme efekti için özel bir easing */
             animation: ultraToss 0.75s cubic-bezier(0.2, 0, 0.2, 1) forwards;
         }
 
@@ -116,7 +110,6 @@
             right: 15px;
             font-size: 20px;
             color: #0d2e0d;
-            display: none;
             font-weight: bold;
         }
 
@@ -155,33 +148,113 @@
             display: none;
             box-shadow: 0 10px 40px rgba(0,0,0,0.7);
             letter-spacing: 1px;
+            font-family: 'Special Elite', cursive;
+        }
+
+        .settings-panel {
+            background: rgba(10, 9, 8, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        input[type=range] {
+            accent-color: #7a0000;
+            cursor: pointer;
+        }
+
+        .menu-btn {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #a1a1aa;
+            padding: 1rem 3rem;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.3em;
+            font-size: 0.75rem;
+            width: 300px;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .menu-btn:hover {
+            border-color: #7a0000;
+            color: white;
+            background: rgba(122, 0, 0, 0.1);
+            box-shadow: 0 0 20px rgba(122, 0, 0, 0.2);
         }
     </style>
 </head>
 <body>
 
-    <div id="msgBox">TÜM ARŞİVİ TARAMADAN KARAR VEREMEZSİNİZ.</div>
+    <div id="msgBox">EKSİK DOSYALAR VAR. TÜM ARŞİVİ TARAMADAN KARAR VEREMEZSİNİZ.</div>
 
+    <!-- MAIN MENU -->
     <div id="mainMenu" class="fixed inset-0 bg-black z-[1000] flex flex-col items-center justify-center text-center p-6">
-        <div class="mb-4 px-3 py-1 border border-red-900/50 text-red-900 text-[10px] tracking-[0.3em] uppercase animate-pulse">Alpha v0.1.4 - Erken Erişim</div>
+        <div class="mb-4 px-3 py-1 border border-red-900/50 text-red-900 text-[10px] tracking-[0.3em] uppercase animate-pulse">Alpha v0.1.8</div>
         <h1 class="font-['Special_Elite'] text-8xl text-stone-200 mb-2 tracking-tighter">COLD FILES</h1>
         <p class="text-stone-600 tracking-[1.5em] mb-16 uppercase text-sm ml-[1.5em]">Vaka: 34 TKR 22 / Taxi</p>
-        <button onclick="startGame()" class="border-2 border-stone-800 text-stone-400 px-16 py-5 hover:border-stone-400 hover:text-white transition-all tracking-[0.5em] uppercase text-sm">Dosyayı Aç</button>
+        
+        <div class="flex flex-col gap-4">
+            <button onclick="startGame()" class="menu-btn !bg-stone-200 !text-black !font-bold border-none hover:!bg-white">Dosyayı Aç</button>
+            <button onclick="toggleSettings()" class="menu-btn">Ayarlar</button>
+            <button onclick="toggleCredits()" class="menu-btn">Emeği Geçenler</button>
+        </div>
+
+        <div class="mt-20 text-stone-800 text-[9px] tracking-widest uppercase italic">Karanlık işler, sessizce çözülür.</div>
     </div>
 
+    <!-- CREDITS MODAL -->
+    <div id="creditsModal" class="hidden fixed inset-0 z-[1200] bg-black/95 flex items-center justify-center p-6" onclick="toggleCredits()">
+        <div class="max-w-md w-full text-center space-y-8" onclick="event.stopPropagation()">
+            <h2 class="text-stone-500 font-['Special_Elite'] text-3xl uppercase tracking-widest">Emeği Geçenler</h2>
+            <div class="space-y-4 font-mono text-xs tracking-widest text-stone-400">
+                <p><span class="text-stone-600">YAPIM:</span> Destroy Games</p>
+                <p><span class="text-stone-600">TASARIM:</span> Destroy Studios</p>
+                <p><span class="text-stone-600">SES:</span> Destroy Music</p>
+            </div>
+            <button onclick="toggleCredits()" class="mt-8 text-stone-600 hover:text-white transition-colors text-[10px] uppercase border-b border-stone-800">Geri Dön</button>
+        </div>
+    </div>
+
+    <!-- GAME HEADER -->
     <header id="gameHeader" class="hidden fixed top-0 w-full z-50 flex justify-between px-10 py-6 bg-black/90 border-b border-white/5">
         <div class="flex flex-col">
             <span class="text-stone-500 font-bold tracking-widest text-[10px] uppercase">Emniyet Genel Müdürlüğü - Kriminal Daire</span>
             <span class="text-stone-700 text-[9px] font-mono italic">Dosya Durumu: Aktif Soruşturma</span>
         </div>
-        <div class="flex gap-6">
+        <div class="flex gap-6 items-center">
             <button onclick="toggleNotes()" class="text-[10px] text-stone-500 border border-stone-800 px-6 py-2 hover:bg-white/5 uppercase transition-all">Not Defteri</button>
+            <button onclick="toggleSettings()" class="text-[10px] text-stone-400 border border-stone-800 px-4 py-2 hover:bg-white/5 uppercase transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline mr-1"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+                Ayarlar
+            </button>
             <button onclick="attemptFinalize()" id="finalBtn" class="text-[10px] text-stone-800 bg-stone-900 px-8 py-2 uppercase cursor-not-allowed transition-all">Karar Ver (Kilitli)</button>
         </div>
     </header>
 
+    <!-- SETTINGS PANEL -->
+    <div id="settingsPanel" class="hidden fixed inset-0 z-[1100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm">
+        <div class="settings-panel max-w-sm w-full p-10 border border-white/10 shadow-2xl">
+            <h2 class="text-stone-300 font-['Special_Elite'] text-2xl mb-8 uppercase tracking-widest text-center">Saha Ayarları</h2>
+            
+            <div class="space-y-8 mb-12">
+                <div class="flex flex-col gap-3">
+                    <div class="flex justify-between text-[10px] text-stone-500 uppercase tracking-widest">
+                        <label>Ses Seviyesi</label>
+                        <span id="volVal">50%</span>
+                    </div>
+                    <input type="range" id="volumeControl" min="0" max="100" value="50" oninput="updateVolume(this.value)" class="w-full h-1 bg-stone-800 rounded-lg appearance-none cursor-pointer">
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-3">
+                <button onclick="toggleSettings()" class="w-full py-4 bg-stone-200 text-black text-xs uppercase font-bold tracking-widest hover:bg-white transition-all">Geri Dön</button>
+                <button id="quitBtn" onclick="quitGame()" class="hidden w-full py-4 border border-red-900/30 text-red-900 text-[10px] uppercase tracking-widest hover:bg-red-900 hover:text-white transition-all">Ana Menü</button>
+            </div>
+        </div>
+    </div>
+
     <main id="desk" class="relative w-full h-full opacity-0 transition-opacity duration-1000"></main>
 
+    <!-- UI PANELS -->
     <div id="notesPanel" class="hidden fixed bottom-12 right-12 w-80 h-[500px] bg-[#0c0c0c] border border-white/10 p-8 z-[60] shadow-2xl rotate-1">
         <div class="text-[10px] text-stone-600 mb-4 uppercase tracking-tighter border-b border-white/5 pb-2">Dedektif Notları</div>
         <textarea id="notes" class="w-full h-[90%] bg-transparent border-none outline-none text-stone-400 font-serif leading-relaxed text-sm resize-none" placeholder="İpuçlarını buraya yaz..."></textarea>
@@ -209,6 +282,43 @@
     </div>
 
     <script>
+        // --- STATE ---
+        let currentGlobalVolume = 0.5;
+
+        // --- AUDIO SYSTEM ---
+        const customTossSound = "https://files.catbox.moe/86fow3.mp3"; 
+        const paperCrinkleSound = "https://files.catbox.moe/66nmvd.mp3"; 
+        const clickSoundEffect = "https://files.catbox.moe/vtwizg.mp3";
+
+        const audioPool = {
+            toss: [],
+            open: new Audio(paperCrinkleSound),
+            close: new Audio(paperCrinkleSound),
+            error: new Audio(paperCrinkleSound),
+            click: new Audio(clickSoundEffect)
+        };
+
+        for(let i=0; i<6; i++) {
+            const a = new Audio(customTossSound);
+            a.preload = "auto";
+            audioPool.toss.push(a);
+        }
+
+        function applyAudioVolumes() {
+            audioPool.open.volume = currentGlobalVolume;
+            audioPool.close.volume = currentGlobalVolume * 0.7;
+            audioPool.error.volume = currentGlobalVolume * 0.8;
+            audioPool.click.volume = currentGlobalVolume * 0.4;
+            audioPool.toss.forEach(s => s.volume = currentGlobalVolume);
+        }
+
+        function playClickSound() {
+            audioPool.click.currentTime = 0;
+            audioPool.click.play().catch(()=>{});
+        }
+
+        applyAudioVolumes();
+
         const documents = {
             crime_scene: {
                 id: 'crime_scene',
@@ -219,12 +329,12 @@
                     <h1 class="text-3xl mb-8 border-b border-stone-800 pb-4">Taksi İnceleme Raporu</h1>
                     <div class="space-y-6 text-lg">
                         <p><strong>Bulgu:</strong> Maktul Selim Aksoy direksiyon başında, emniyet kemeri takılı halde ölü bulundu.</p>
-                        <p><strong>Kritik Kanıt:</strong> Maktulün sağ elinde, parmaklarının arasına sıkışmış bir adet <strong>Gümüş Kol Düğmesi</strong> (Üzerinde "C.Y." harfleri kazılı) bulundu.</p>
-                        <p><strong>Araç İçi:</strong> Torpido gözünde maktule ait ilaç çantası açık durumda. Çantanın içinde bir adet <strong>boş su şişesi</strong> ve maktulün rutin kullandığı beyaz haplar mevcut.</p>
-                        <p><strong>Not:</strong> Araçta herhangi bir zorlama izi yok. Yolcu koltuğu temiz, ancak zeminde hastanelerde kullanılan türden bir <strong>mavi galoş parçası</strong> bulundu.</p>
+                        <p><strong>Kritik Kanıt:</strong> Maktulün sağ elinde, parmaklarının arasına sıkışmış bir adet Gümüş Kol Düğmesi (Üzerinde "C.Y." harfleri kazılı) bulundu.</p>
+                        <p><strong>Araç İçi:</strong> Torpido gözünde maktule ait ilaç çantası açık durumda. Çantanın içinde bir adet boş su şişesi ve maktulün rutin kullandığı beyaz haplar mevcut.</p>
+                        <p><strong>Not:</strong> Araçta herhangi bir zorlama izi yok. Yolcu koltuğu temiz, ancak zeminde hastanelerde kullanılan türden bir mavi galoş parçası bulundu.</p>
                     </div>
                 `,
-                x: 100, y: 150, rot: -2, inspected: false
+                x: 120, y: 160, rot: -3, inspected: false
             },
             zeynep_statement: {
                 id: 'zeynep_statement',
@@ -234,81 +344,90 @@
                     <h1 class="text-3xl mb-8 border-b border-stone-800 pb-4">Tanık/Şüpheli İfadesi: ZEYNEP A.</h1>
                     <div class="space-y-6 text-lg">
                         <p><strong>Meslek:</strong> Hemşire (Özel bir klinikte gece vardiyası).</p>
-                        <p><strong>İfade:</strong> "Hastaneden çıktım, çok yorgundum. Selim amcanın taksisine bindim, onu mahalleden tanırım. Yolda aniden fenalaştı, göğsünü tuttu. Hemen kenara çekmesini söyledim. Torpidodan ilaçlarını istedi. Çantasından <strong>pembe bir hap</strong> çıkarıp verdim, kalp ilacı olduğunu söyledi. Sonra durumu kötüleşince korkup kaçtım, başıma bir iş gelmesin diye. Çok pişmanım."</p>
+                        <p><strong>İfade:</strong> ""Hastaneden çıktım, çok yorgundum. Selim amcanın taksisine bindim, onu mahalleden tanırım. Yolda aniden fenalaştı, göğsünü tuttu. Hemen kenara çekmesini söyledim. Torpidodan ilaçlarını istedi. Çantasından pembe bir hap çıkarıp verdim, kalp ilacı olduğunu söyledi. Sonra durumu kötüleşince korkup kaçtım, başıma bir iş gelmesin diye. Çok pişmanım.""</p>
                         <p><strong>Gözlem:</strong> İfade sırasında oldukça sakin. Elinde hafif bir titreme var ama profesyonel bir soğukkanlılık sergiliyor.</p>
                     </div>
                 `,
-                x: 450, y: 120, rot: 4, inspected: false
+                x: 480, y: 130, rot: 5, inspected: false
             },
             medical_report: {
                 id: 'medical_report',
-                title: 'TOKSİKOLOJİ VE SAĞLIK KAYDI',
+                title: 'TOKSİKOLOJİ RAPORU',
                 label: 'ADLİ TIP ANALİZİ',
                 content: `
                     <div class="stamp-red">GİZLİ</div>
                     <h1 class="text-3xl mb-8 border-b border-stone-800 pb-4">Maktul Sağlık Geçmişi</h1>
                     <div class="space-y-6 text-lg">
-                        <p><strong>Kayıtlı İlaçlar:</strong> Alprazolam (1mg - <strong>Beyaz renkli</strong>, yuvarlak tabletler).</p>
-                        <p><strong>Ölüm Nedeni:</strong> Akut Kalp Durması. Kanda maktulün rutin ilacı yerine yüksek dozda <strong>Digoksin</strong> (Kalp atışını yavaşlatan ama doz aşımında durduran, <strong>pembe renkli</strong> bir ilaç) tespit edildi.</p>
+                        <p><strong>Kayıtlı İlaçlar:</strong> Alprazolam (1mg - Beyaz renkli, yuvarlak tabletler).</p>
+                        <p><strong>Ölüm Nedeni:</strong> Akut Kalp Durması. Kanda maktulün rutin ilacı yerine yüksek dozda Digoksin (Kalp atışını yavaşlatan ama doz aşımında durduran, pembe renkli bir ilaç) tespit edildi.</p>
                         <p><strong>Kritik Bilgi:</strong> Digoksin, maktulün reçetesinde bulunmamaktadır. Bu ilaç sadece hastane ortamında, kontrollü olarak kullanılan bir maddedir.</p>
+
                     </div>
                 `,
-                x: 750, y: 140, rot: -1, inspected: false
+                x: 780, y: 150, rot: -2, inspected: false
             },
             cemil_file: {
                 id: 'cemil_file',
                 title: 'ŞÜPHELİ KAYDI: CEMİL YAKUT',
                 label: 'PERSONEL DOSYASI',
                 content: `
-                    <h1 class="text-3xl mb-8 border-b border-stone-800 pb-4">Cemil Yakut (Gündüz Şoförü)</h1>
+                    <h1 class="text-3xl mb-8 border-b border-stone-800 pb-4">Cemil Yakut (Ortak)</h1>
                     <div class="space-y-6 text-lg">
-                        <p><strong>İlişki:</strong> Maktulün ortağı. Son 3 aydır taksi plakasının satışı yüzünden maktulle kavgalı olduğu biliniyor.</p>
-                        <p><strong>Fiziksel Kanıt:</strong> Cemil'in sağ manşetinde bir kol düğmesi eksik. Maktulün elindeki düğmenin Cemil'e ait olduğu kesinleşti.</p>
-                        <p><strong>Sorgu Notu:</strong> "Kol düğmemi 1 hafta önce araçta kaybettim. Selim bulup cebine koymuştur, bana verecekti herhalde" diyor. Cemil'in herhangi bir tıbbi bilgisi veya hastaneye erişimi yok.</p>
+                        <p><strong>İlişki:</strong> Maktulün ortağı. Cemil'in sağ manşetinde bir kol düğmesi eksik.</p>
+                        <p><strong>Fiziksel Kanıt:</strong> "Cemil'in sağ manşetinde bir kol düğmesi eksik. Maktulün elindeki düğmenin Cemil'e ait olduğu kesinleşti."</p>
+                        <p><strong>Sorgu Notu:</strong> ""Kol düğmemi 1 hafta önce araçta kaybettim. Selim bulup cebine koymuştur, bana verecekti herhalde" diyor. Cemil'in resmiyette herhangi bir tıbbi bilgisi yok."</p>
+
                     </div>
                 `,
-                x: 350, y: 400, rot: 2, inspected: false
+                x: 380, y: 420, rot: 3, inspected: false
             }
         };
 
         function startGame() {
+            playClickSound();
             document.getElementById('mainMenu').style.display = 'none';
             document.getElementById('gameHeader').classList.remove('hidden');
             document.getElementById('desk').classList.remove('opacity-0');
+            document.getElementById('quitBtn').classList.remove('hidden');
             initDesk();
+        }
+
+        function playTossSound(index) {
+            setTimeout(() => {
+                const s = audioPool.toss[index % audioPool.toss.length];
+                s.currentTime = 0;
+                s.play().catch(e => console.log("Ses hatası:", e));
+            }, (index * 150) + 400); 
         }
 
         function initDesk() {
             const desk = document.getElementById('desk');
             desk.innerHTML = '';
-            
             Object.values(documents).forEach((doc, index) => {
                 const div = document.createElement('div');
                 div.className = `document tossed`;
                 div.id = `doc-${doc.id}`;
-                
                 div.style.left = doc.x + 'px';
                 div.style.top = doc.y + 'px';
                 
-                // --- GELİŞMİŞ RASTGELELİK VE KAVİS ---
-                const randomStartX = (Math.random() * 400) - 200; 
-                const randomStartY = 800 + (Math.random() * 200); // Ekranın çok altından
-                const randomStartRot = (Math.random() * 180) - 90; // Havada dönerken gelir
-                const midRot = (doc.rot + randomStartRot) / 2; // Havada geçiş rotasyonu
+                const randomStartX = (Math.random() * 800) - 400; 
+                const randomStartY = 1000 + (Math.random() * 200); 
+                const randomStartRot = (Math.random() * 180) - 90;
+                const midRot = (doc.rot + randomStartRot) / 2;
 
                 div.style.setProperty('--startX', `${randomStartX}px`);
                 div.style.setProperty('--startY', `${randomStartY}px`);
                 div.style.setProperty('--startRot', `${randomStartRot}deg`);
                 div.style.setProperty('--midRot', `${midRot}deg`);
                 div.style.setProperty('--endRot', `${doc.rot}deg`);
-                
-                // Daha hızlı seri atış hissi
                 div.style.animationDelay = `${index * 0.15}s`;
+
+                playTossSound(index);
 
                 div.innerHTML = `
                     <div class="folder-label">${doc.label}</div>
                     <div class="document-title">${doc.title}</div>
-                    <div class="inspected-mark" id="mark-${doc.id}">✓</div>
+                    <div class="inspected-mark" id="mark-${doc.id}">${doc.inspected ? '✓' : ''}</div>
                 `;
                 div.ondblclick = () => openDoc(doc.id);
                 makeDraggable(div);
@@ -319,14 +438,15 @@
         function makeDraggable(el) {
             let p1=0, p2=0, p3=0, p4=0;
             el.onmousedown = (e) => {
-                // Sürüklemeye başlandığında animasyonu temizle
                 const currentRot = getComputedStyle(el).getPropertyValue('--endRot');
                 el.classList.remove('tossed');
                 el.style.transform = `rotate(${currentRot})`;
                 el.style.opacity = '1';
-
                 p3 = e.clientX; p4 = e.clientY;
-                document.onmouseup = () => { document.onmouseup = null; document.onmousemove = null; };
+                document.onmouseup = () => { 
+                    document.onmouseup = null; 
+                    document.onmousemove = null; 
+                };
                 document.onmousemove = (e) => {
                     p1 = p3 - e.clientX; p2 = p4 - e.clientY;
                     p3 = e.clientX; p4 = e.clientY;
@@ -339,9 +459,12 @@
         }
 
         function openDoc(id) {
+            audioPool.open.currentTime = 0;
+            audioPool.open.play().catch(()=>{});
             const doc = documents[id];
             doc.inspected = true;
-            document.getElementById(`mark-${id}`).style.display = 'block';
+            const mark = document.getElementById(`mark-${id}`);
+            if(mark) mark.innerText = '✓';
             document.getElementById('modalContent').innerHTML = doc.content;
             document.getElementById('docModal').classList.remove('hidden');
             checkStatus();
@@ -357,8 +480,32 @@
             }
         }
 
+        function updateVolume(val) {
+            currentGlobalVolume = val / 100;
+            document.getElementById('volVal').innerText = val + "%";
+            applyAudioVolumes();
+        }
+
+        function toggleSettings() {
+            playClickSound();
+            document.getElementById('settingsPanel').classList.toggle('hidden');
+        }
+
+        function toggleCredits() {
+            playClickSound();
+            document.getElementById('creditsModal').classList.toggle('hidden');
+        }
+
+        function quitGame() {
+            playClickSound();
+            location.reload();
+        }
+
         function attemptFinalize() {
+            playClickSound();
             if(!Object.values(documents).every(d => d.inspected)) {
+                audioPool.error.currentTime = 0;
+                audioPool.error.play().catch(()=>{});
                 const m = document.getElementById('msgBox');
                 m.style.display = 'block';
                 setTimeout(() => m.style.display = 'none', 3000);
@@ -370,9 +517,9 @@
         function showFinalize() {
             const l = document.getElementById('suspectList');
             const s = [
-                {n: "ZEYNEP A.", d: "Hemşire / Yolcu"},
-                {n: "CEMİL YAKUT", d: "Gündüz Şoförü / Ortak"},
-                {n: "DOĞAL ÖLÜM", d: "Kalp Krizi / Kaza"}
+                {n: "ZEYNEP A.", d: "Yolcu"},
+                {n: "CEMİL YAKUT", d: "Ortak"},
+                {n: "DOĞAL ÖLÜM", d: "Yetersiz Delil"}
             ];
             l.innerHTML = s.map(x => `
                 <button onclick="solve('${x.n}')" class="w-full p-5 border border-white/5 hover:border-stone-500 hover:bg-white/5 text-left transition-all">
@@ -384,6 +531,7 @@
         }
 
         function solve(name) {
+            playClickSound();
             const scr = document.getElementById('gameOverScreen');
             const st = document.getElementById('endStatus');
             const tx = document.getElementById('endText');
@@ -391,27 +539,35 @@
             scr.classList.remove('hidden');
 
             if(name === "ZEYNEP A.") {
-                st.innerText = "TEBRİKLER DEDEKTİF";
+                st.innerText = "DOSYA KAPANDI";
                 st.style.color = "#a1a1aa";
-                tx.innerText = "Harika bir çıkarım! Zeynep A. ifadesinde maktule 'pembe' bir hap verdiğini söyledi ancak maktulün reçeteli ilacı 'beyaz' idi. Zeynep, maktulün kalp krizini fırsat bilerek yanında getirdiği öldürücü 'Digoksin' (pembe) hapını ona yardım ediyormuş gibi verdi. Cemil'in daha önce kaybettiği kol düğmesini ise maktulün eline tutuşturarak suçu onun üzerine atmaya çalıştı. Zemindeki mavi galoş parçası ve tıbbi bilgi farkı onu ele verdi.";
-            } else if(name === "CEMİL YAKUT") {
-                st.innerText = "KORKUNÇ HATA";
-                st.style.color = "#7f1d1d";
-                tx.innerText = "Cemil Yakut masumdu. Evet, kol düğmesi onundu ve maktulle kavgalıydı ama bir taksi şoförünün hastane ilacına (Digoksin) erişimi yoktu. Zeynep A. profesyonel bir katil gibi tüm kanıtları manipüle etti ve Cemil ömür boyu hapis cezası aldı. Gerçek suçlu hala sokaklarda.";
+                tx.innerText = "Tebrikler dedektif. Zeynep A.'nın soğukkanlı planını bozdun. Pembe renkli Digoksin hapı ve hastane galoşu onu ele veren parçalardı.";
+            } else if(name === "DOĞAL ÖLÜM") {
+                st.innerText = "DOSYA RAFA KALDIRILDI";
+                st.style.color = "#4b5563";
+                tx.innerText = "Olayın doğal sebeplerden kaynaklandığına hükmettin. Dosya 'çözülemeyenler' arasına girdi. Belki de gerçek katili görmezden geldin...";
             } else {
-                st.innerText = "SORUŞTURMA ÇÖKTÜ";
-                st.style.color = "#525252";
-                tx.innerText = "Dosyadaki çelişkileri görmezden geldin. Otopsi raporundaki yabancı madde ve Zeynep'in ifadesindeki renk detayı gözünden kaçtı. Katil serbest kaldı.";
+                st.innerText = "MASUM BİRİ HAPİSTE";
+                st.style.color = "#7f1d1d";
+                tx.innerText = "Yanlış karar. Gerçek katil hala sokaklarda ve yeni kurbanını arıyor. Cemil Yakut ise işlemediği bir suçtan ömür boyu hapse mahkum edildi.";
             }
         }
 
-        function closeModal() { document.getElementById('docModal').classList.add('hidden'); }
-        function hideFinalize() { document.getElementById('finalModal').classList.add('hidden'); }
-        function toggleNotes() { document.getElementById('notesPanel').classList.toggle('hidden'); }
+        function closeModal() { 
+            audioPool.close.currentTime = 0;
+            audioPool.close.play().catch(()=>{});
+            document.getElementById('docModal').classList.add('hidden'); 
+        }
+        function hideFinalize() { 
+            playClickSound();
+            document.getElementById('finalModal').classList.add('hidden'); 
+        }
+        function toggleNotes() { 
+            playClickSound();
+            document.getElementById('notesPanel').classList.toggle('hidden'); 
+        }
 
-        document.addEventListener('keydown', (e) => {
-            if(e.key === "Escape") closeModal();
-        });
+        window.onload = () => { applyAudioVolumes(); };
     </script>
 </body>
 </html>
