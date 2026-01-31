@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cold Files Alpha</title>
+    <title>Cold Files Beta</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Special+Elite&display=swap');
@@ -180,15 +180,32 @@
             background: rgba(122, 0, 0, 0.1);
             box-shadow: 0 0 20px rgba(122, 0, 0, 0.2);
         }
+
+        /* --- TELEGRAPH EFFECTS --- */
+        #endText {
+            min-height: 120px;
+        }
+        .cursor {
+            display: inline-block;
+            width: 10px;
+            height: 20px;
+            background: #555;
+            margin-left: 5px;
+            animation: blink 0.8s infinite;
+            vertical-align: middle;
+        }
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
     </style>
 </head>
 <body>
 
-    <div id="msgBox">EKSİK DOSYALAR VAR. TÜM ARŞİVİ TARAMADAN KARAR VEREMEZSİNİZ.</div>
+    <div id="msgBox">TÜM ARŞİVİ TARAMADAN KARAR VEREMEZSİNİZ.</div>
 
     <!-- MAIN MENU -->
     <div id="mainMenu" class="fixed inset-0 bg-black z-[1000] flex flex-col items-center justify-center text-center p-6">
-        <div class="mb-4 px-3 py-1 border border-red-900/50 text-red-900 text-[10px] tracking-[0.3em] uppercase animate-pulse">Alpha v0.1.8</div>
+        <div class="mb-4 px-3 py-1 border border-red-900/50 text-red-900 text-[10px] tracking-[0.3em] uppercase animate-pulse">Beta 1.0</div>
         <h1 class="font-['Special_Elite'] text-8xl text-stone-200 mb-2 tracking-tighter">COLD FILES</h1>
         <p class="text-stone-600 tracking-[1.5em] mb-16 uppercase text-sm ml-[1.5em]">Vaka: 34 TKR 22 / Taxi</p>
         
@@ -247,7 +264,7 @@
 
             <div class="flex flex-col gap-3">
                 <button onclick="toggleSettings()" class="w-full py-4 bg-stone-200 text-black text-xs uppercase font-bold tracking-widest hover:bg-white transition-all">Geri Dön</button>
-                <button id="quitBtn" onclick="quitGame()" class="hidden w-full py-4 border border-red-900/30 text-red-900 text-[10px] uppercase tracking-widest hover:bg-red-900 hover:text-white transition-all">Ana Menü</button>
+                <button id="quitBtn" onclick="quitToMenu()" class="hidden w-full py-4 border border-red-900/30 text-red-900 text-[10px] uppercase tracking-widest hover:bg-red-900 hover:text-white transition-all">Ana Menü</button>
             </div>
         </div>
     </div>
@@ -275,10 +292,31 @@
         </div>
     </div>
 
-    <div id="gameOverScreen" class="fixed inset-0 bg-black z-[3000] hidden flex flex-col items-center justify-center text-center p-16">
-        <h2 id="endStatus" class="text-6xl font-['Special_Elite'] mb-10 tracking-tighter"></h2>
-        <p id="endText" class="max-w-3xl text-stone-500 text-xl font-serif italic mb-20 leading-relaxed"></p>
-        <button onclick="location.reload()" class="border border-stone-800 text-stone-500 px-12 py-4 hover:border-stone-400 hover:text-white transition-all uppercase text-xs tracking-widest">Alpha Sonu</button>
+    <!-- GAME OVER SCREEN -->
+    <div id="gameOverScreen" class="fixed inset-0 bg-black z-[3000] hidden flex flex-col items-center justify-center p-8 md:p-16">
+        <div class="max-w-4xl w-full border border-stone-900 p-8 md:p-16 bg-zinc-950/50 relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-stone-800 to-transparent"></div>
+            
+            <div class="mb-12 flex justify-between items-start border-b border-stone-900 pb-8">
+                <div class="text-left">
+                    <div class="text-[10px] text-stone-600 uppercase tracking-[0.4em] mb-2">Resmi Telgraf Servisi</div>
+                    <div class="text-[10px] text-stone-500 font-mono">ID: 34-TKR-22-FINAL</div>
+                </div>
+                <div class="text-right">
+                    <div id="endStatus" class="text-2xl font-['Special_Elite'] tracking-widest uppercase"></div>
+                </div>
+            </div>
+
+            <div class="relative">
+                <p id="endText" class="text-stone-400 text-lg md:text-2xl font-['Courier_Prime'] leading-relaxed tracking-tight text-left"></p>
+                <div id="telegraphCursor" class="cursor hidden"></div>
+            </div>
+
+            <div class="mt-20 pt-8 border-t border-stone-900 flex flex-col md:flex-row justify-between items-center gap-8">
+                <div class="text-[9px] text-stone-700 uppercase tracking-widest italic">STOP. RAPORUN SONU. STOP.</div>
+                <button id="restartBtn" onclick="quitToMenu()" class="hidden border border-stone-800 text-stone-500 px-12 py-4 hover:border-stone-400 hover:text-white transition-all uppercase text-[10px] tracking-[0.3em]">Arşivi Kapat</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -289,14 +327,18 @@
         const customTossSound = "https://files.catbox.moe/86fow3.mp3"; 
         const paperCrinkleSound = "https://files.catbox.moe/66nmvd.mp3"; 
         const clickSoundEffect = "https://files.catbox.moe/vtwizg.mp3";
+        const telegraphLoopSound = "https://files.catbox.moe/svl419.mp3"; 
 
         const audioPool = {
             toss: [],
             open: new Audio(paperCrinkleSound),
             close: new Audio(paperCrinkleSound),
             error: new Audio(paperCrinkleSound),
-            click: new Audio(clickSoundEffect)
+            click: new Audio(clickSoundEffect),
+            typeLoop: new Audio(telegraphLoopSound) 
         };
+
+        audioPool.typeLoop.loop = true;
 
         for(let i=0; i<6; i++) {
             const a = new Audio(customTossSound);
@@ -309,6 +351,7 @@
             audioPool.close.volume = currentGlobalVolume * 0.7;
             audioPool.error.volume = currentGlobalVolume * 0.8;
             audioPool.click.volume = currentGlobalVolume * 0.4;
+            audioPool.typeLoop.volume = currentGlobalVolume * 0.5;
             audioPool.toss.forEach(s => s.volume = currentGlobalVolume);
         }
 
@@ -329,7 +372,7 @@
                     <h1 class="text-3xl mb-8 border-b border-stone-800 pb-4">Taksi İnceleme Raporu</h1>
                     <div class="space-y-6 text-lg">
                         <p><strong>Bulgu:</strong> Maktul Selim Aksoy direksiyon başında, emniyet kemeri takılı halde ölü bulundu.</p>
-                        <p><strong>Kritik Kanıt:</strong> Maktulün sağ elinde, parmaklarının arasına sıkışmış bir adet Gümüş Kol Düğmesi (Üzerinde "C.Y." harfleri kazılı) bulundu.</p>
+                        <p><strong>Kritik Kanıt:</strong> Maktulün sağ elinde, parmaklarının arasına sıkışmış bir adet Gümüş Kol Düğmesi (Üzerinde "M.Ü." harfleri kazılı) bulundu.</p>
                         <p><strong>Araç İçi:</strong> Torpido gözünde maktule ait ilaç çantası açık durumda. Çantanın içinde bir adet boş su şişesi ve maktulün rutin kullandığı beyaz haplar mevcut.</p>
                         <p><strong>Not:</strong> Araçta herhangi bir zorlama izi yok. Yolcu koltuğu temiz, ancak zeminde hastanelerde kullanılan türden bir mavi galoş parçası bulundu.</p>
                     </div>
@@ -366,16 +409,16 @@
                 `,
                 x: 780, y: 150, rot: -2, inspected: false
             },
-            cemil_file: {
-                id: 'cemil_file',
-                title: 'ŞÜPHELİ KAYDI: CEMİL YAKUT',
+            musa_file: {
+                id: 'musa_file',
+                title: 'ŞÜPHELİ KAYDI: MUSA Ü.',
                 label: 'PERSONEL DOSYASI',
                 content: `
-                    <h1 class="text-3xl mb-8 border-b border-stone-800 pb-4">Cemil Yakut (Ortak)</h1>
+                    <h1 class="text-3xl mb-8 border-b border-stone-800 pb-4">Musa Ü. (Ortak)</h1>
                     <div class="space-y-6 text-lg">
-                        <p><strong>İlişki:</strong> Maktulün ortağı. Cemil'in sağ manşetinde bir kol düğmesi eksik.</p>
-                        <p><strong>Fiziksel Kanıt:</strong> "Cemil'in sağ manşetinde bir kol düğmesi eksik. Maktulün elindeki düğmenin Cemil'e ait olduğu kesinleşti."</p>
-                        <p><strong>Sorgu Notu:</strong> ""Kol düğmemi 1 hafta önce araçta kaybettim. Selim bulup cebine koymuştur, bana verecekti herhalde" diyor. Cemil'in resmiyette herhangi bir tıbbi bilgisi yok."</p>
+                        <p><strong>İlişki:</strong> Maktulün ortağı. Musa'nın sağ manşetinde bir kol düğmesi eksik.</p>
+                        <p><strong>Fiziksel Kanıt:</strong> "Musa'nın sağ manşetinde bir kol düğmesi eksik. Maktulün elindeki düğmenin Musa'ya ait olduğu kesinleşti."</p>
+                        <p><strong>Sorgu Notu:</strong> ""Kol düğmemi 1 hafta önce araçta kaybettim. Selim bulup cebine koymuştur, bana verecekti herhalde" diyor. Musa'nın resmiyette herhangi bir tıbbi bilgisi yok."</p>
 
                     </div>
                 `,
@@ -496,8 +539,9 @@
             document.getElementById('creditsModal').classList.toggle('hidden');
         }
 
-        function quitGame() {
+        function quitToMenu() {
             playClickSound();
+            // Sayfayı yenileyerek temiz bir şekilde ana menüye dön
             location.reload();
         }
 
@@ -518,8 +562,8 @@
             const l = document.getElementById('suspectList');
             const s = [
                 {n: "ZEYNEP A.", d: "Yolcu"},
-                {n: "CEMİL YAKUT", d: "Ortak"},
-                {n: "DOĞAL ÖLÜM", d: "Yetersiz Delil"}
+                {n: "MUSA Ü.", d: "Ortak"},
+                {n: "DOĞAL ÖLÜM", d: "YETERSİZ DELİL"}
             ];
             l.innerHTML = s.map(x => `
                 <button onclick="solve('${x.n}')" class="w-full p-5 border border-white/5 hover:border-stone-500 hover:bg-white/5 text-left transition-all">
@@ -530,27 +574,51 @@
             document.getElementById('finalModal').classList.remove('hidden');
         }
 
+        async function typeWriter(text, elementId) {
+            const element = document.getElementById(elementId);
+            const cursor = document.getElementById('telegraphCursor');
+            element.innerHTML = "";
+            cursor.classList.remove('hidden');
+            
+            audioPool.typeLoop.currentTime = 0;
+            audioPool.typeLoop.play().catch(()=>{});
+            
+            for (let i = 0; i < text.length; i++) {
+                element.innerHTML += text.charAt(i);
+                await new Promise(resolve => setTimeout(resolve, 30 + Math.random() * 50));
+            }
+            
+            audioPool.typeLoop.pause();
+            audioPool.typeLoop.currentTime = 0;
+
+            cursor.classList.add('hidden');
+            document.getElementById('restartBtn').classList.remove('hidden');
+        }
+
         function solve(name) {
             playClickSound();
             const scr = document.getElementById('gameOverScreen');
             const st = document.getElementById('endStatus');
-            const tx = document.getElementById('endText');
             document.getElementById('finalModal').classList.add('hidden');
             scr.classList.remove('hidden');
 
+            let finalMessage = "";
+            
             if(name === "ZEYNEP A.") {
                 st.innerText = "DOSYA KAPANDI";
                 st.style.color = "#a1a1aa";
-                tx.innerText = "Tebrikler dedektif. Zeynep A.'nın soğukkanlı planını bozdun. Pembe renkli Digoksin hapı ve hastane galoşu onu ele veren parçalardı.";
+                finalMessage = "TEBRİKLER DEDEKTİF. ZEYNEP A.'NIN SOĞUKKANLI PLANINI BOZDUN. PEMBE RENKLİ DIGOKSIN HAPI VE HASTANE GALOŞU ONU ELE VEREN PARÇALARDI. ADALET YERİNİ BULDU.";
             } else if(name === "DOĞAL ÖLÜM") {
                 st.innerText = "DOSYA RAFA KALDIRILDI";
                 st.style.color = "#4b5563";
-                tx.innerText = "Olayın doğal sebeplerden kaynaklandığına hükmettin. Dosya 'çözülemeyenler' arasına girdi. Belki de gerçek katili görmezden geldin...";
+                finalMessage = "OLAYIN DOĞAL SEBEPLERDEN KAYNAKLANDIĞINA HÜKMETTİN. DOSYA 'ÇÖZÜLEMEYENLER' ARASINA GİRDİ. BELKİ DE GERÇEK KATİLİ GÖRMEZDEN GELDİN VE BİR DOSYA DAHA TOZLU RAFLARDA KAYBOLDU.";
             } else {
-                st.innerText = "MASUM BİRİ HAPİSTE";
+                st.innerText = "HATA: MASUM MAHKUM";
                 st.style.color = "#7f1d1d";
-                tx.innerText = "Yanlış karar. Gerçek katil hala sokaklarda ve yeni kurbanını arıyor. Cemil Yakut ise işlemediği bir suçtan ömür boyu hapse mahkum edildi.";
+                finalMessage = "YANLIŞ KARAR. GERÇEK KATİL HALA SOKAKLARDA VE YENİ KURBANINI ARIYOR. MUSA Ü. İSE İŞLEMEDİĞİ BİR SUÇTAN ÖMÜR BOYU HAPSE MAHKUM EDİLDİ. BİR MASUMUN VEBALİ ÜZERİNDE.";
             }
+
+            typeWriter(finalMessage, 'endText');
         }
 
         function closeModal() { 
